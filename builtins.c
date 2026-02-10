@@ -129,9 +129,167 @@ int command_env(char** env) {
     }
     return 0 ;
 }
+// function to search for the command in PATH
+char* find_command_in_path(const char* command, char** env) {
+
+    char* path_env = NULL ;
+    char* path = NULL ;
+    char* token = NULL ;
+    char full_path[1024] ;
+
+    path_env = my_getenv("PATH", env) ;
+
+    printf("%s", path_env) ;
+
+
+    if(!path_env) {
+        return NULL ;
+    }
+
+    path = my_strdup(path_env) ;
+    
+    if(!path) {
+        perror("my_strdup") ;
+        return NULL ;
+    }
+    token = strtok(path, ":") ;
+    // printf("token : %s", token ) ;
+    
+    while(token) {
+        size_t len = my_strlen(token) ;
+
+        if(token[len - 1] == '/') {
+            snprintf(full_path, sizeof(full_path), "%s%s", token, command) ;
+        }
+        else {
+            snprintf(full_path, sizeof(full_path), "%s%s%s", token, "/", command) ;
+        }
+
+        // if the command exists as executable
+        if(!access(full_path, X_OK)) {
+            free(path) ;
+            return my_strdup(full_path) ;
+        }
+        token = strtok(NULL, ":") ; // don't start from a new string, continue from where u stopped
+    }
+    free(path) ;
+    return NULL ;
+}
+
 int command_which(char** args, char** env) {
 
-}
-int command_exit(char** args, char* intial_directory) {
+    if(args[1] == NULL) {
+        printf("which: expected argument\n") ;
+        return 1 ;
+    }
 
+    // const char* built_in_commands[] = {"cd", "pwd", "echo", "env", "setenv", "unsetenv", "which", "exit"} ;
+
+    // for(size_t i = 0 ; i < 8 ; i++) {
+    //     if(!my_strcmp(built_in_commands[i] , args[1])) {
+    //         printf("%s: shell buillt-in command\n", args[1]) ;
+    //         return 0 ;
+    //     }
+    // }
+    // for external commands 
+    char* full_path = find_command_in_path(args[1], env) ;
+    printf("%s\n", full_path) ;
+    return 1 ;
 }
+
+int cnt_env_vars(char** env) {
+    int cnt = 0 ;
+    while(env[cnt]) cnt++ ;
+    return cnt ;
+}
+
+
+char** command_setenv(char** args, char** env) {
+    if(!args[1]) {
+        printf("Usage : setenv VAR=value\nor\tsetenv <variable> <value>\n") ;
+        return env ;
+    }
+   int env_cnt = cnt_env_vars(env) ;
+   char** new_env = malloc((env_cnt + 2) * sizeof(char*)) ;
+
+   if(!new_env) {
+    perror("malloc") ;
+    return env ;
+   }
+
+   for(size_t i = 0 ; i < env_cnt ; i++) {
+    new_env[i] = my_strdup(env[i]) ;
+    if(!new_env[i]) {
+
+        perror("strdup") ;
+        for(size_t j = 0 ; j < i ; j++) {
+            free(new_env[j]) ;
+        }
+        free(new_env) ;
+        return env ;
+    }
+   }
+   char* new_var = NULL ;
+   if(!args[2]) {
+    new_var = strdup(args[1]) ;
+   }
+   else {
+    new_var = malloc((my_strlen(args[1]) + my_strlen(args[2]) + 2) * sizeof(char)) ;
+    if(new_var) {
+        sprintf(new_var, "%s=%s", args[1], args[2]) ;
+    }
+   }    
+
+   if(!new_var) {
+    perror("malloc") ;
+    for(int i = 0 ; i < env_cnt ; i++) {
+        free(new_env[i]) ;
+    }
+    free(new_env) ;
+    return env ;
+   }
+   new_env[env_cnt] = new_var ;
+   new_env[env_cnt + 1] = NULL ;
+
+return new_env ;
+}
+
+char** command_unsetenv(char** args, char** env) {
+
+    if(!args[1]) {
+        printf("Usage: unsetenv <variable>\n") ;
+        return env ;
+    }
+
+    int env_cnt = cnt_env_vars(env) ;
+    char** new_env = malloc(env_cnt * sizeof(char*)) ;
+
+    if(!new_env) {
+        perror("malloc") ;
+        return env ;
+    }
+    int loc = 0, found = 0, len = my_strlen(args[1]) ;
+
+    for(int i = 0 ; i < env_cnt ; i++) {
+
+        if(!my_strncmp(env[i], args[1], len) && !my_strncmp(env[i] + len, "=", 1)) {
+            found = 1 , loc = i ;
+            free(env[i]) ;
+            break ;
+        }
+    }
+    if(!found) {
+        free(new_env) ;
+        printf("Variable %s don't found int environment\n" , args[1]) ;
+        return env ;
+    }
+    for(int i = 0 , j = 0 ; j < env_cnt;  j++) {
+        if(j == loc) continue ;
+        new_env[i++] = env[j] ;
+    }
+    for(int i = 0 ; i < env_cnt; i++) {
+        free(env[i]) ;
+    }
+    free(env) ;
+    return new_env ;
+} 

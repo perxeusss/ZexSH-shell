@@ -1,5 +1,5 @@
 TARGET = zexsh
-OBJ = main.c input_parser.c helpers.c builtins.c
+OBJ = main.c input_parser.c helpers.c builtins.c executor.c
 CC = gcc
 
 all :	

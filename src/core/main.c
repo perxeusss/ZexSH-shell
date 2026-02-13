@@ -1,4 +1,5 @@
 #include "zexsh.h"
+#include "signals.h"
 
 int shell_builts(char** args, char** env, char* initial_directory) {
 
@@ -21,7 +22,7 @@ int shell_builts(char** args, char** env, char* initial_directory) {
         exit(EXIT_SUCCESS);
     }
     else {
-        return executor(args, env);
+         executor(args, env) ;
     }
 }
 
@@ -31,6 +32,7 @@ void shell_loop(char** env) {
 
     char** args;
     char* initial_directory = getcwd(NULL, 0);
+   
 
     while(1) {
 

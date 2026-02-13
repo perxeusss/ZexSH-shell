@@ -23,13 +23,13 @@ int command_which(char** args, char** env) ;
 char** command_setenv(char** args, char** env) ;
 char** command_unsetenv(char** args, char** env) ;
 
-// Executors 
-int executor(char** args, char** env) ;
-int child_process(char** args, char** env) ;
+// // Executors 
+void executor(char** args, char** env) ;
+// int child_process(char** args, char** env) ;
 
-// Path functions
-char* get_path(char** env) ;
-char** split_paths(char* paths, int* cnt) ;
+// // Path functions
+// char* get_path(char** env) ;
+// char** split_paths(char* paths, int* cnt) ;
 
 
 

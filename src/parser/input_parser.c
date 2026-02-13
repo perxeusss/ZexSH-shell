@@ -15,10 +15,11 @@ char** parse_input(char* input) {
 
     while (input[i]) {
         /* skip spaces */
-        while (input[i] == ' ')
-            i++;
-        if (!input[i])
-            break;
+        while (input[i] == ' ') i++;
+
+        if (!input[i]) {
+              break ;
+        }
 
         char *token = &input[i];
         size_t token_length = 0;
